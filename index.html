@@ -56,15 +56,9 @@
 <body>
 <div class="stage">
   <header class="header">
-    <div class="header-stat">
-      <span class="stat-label">Distance</span>
-      <span class="stat-value" id="distance">0</span>
-    </div>
+    <div class="header-stat"><span class="stat-label">Distance</span><span class="stat-value" id="distance">0</span></div>
     <h1 class="title">Runner</h1>
-    <div class="header-stat right">
-      <span class="stat-label">Record</span>
-      <span class="stat-value" id="best">0</span>
-    </div>
+    <div class="header-stat right"><span class="stat-label">Record</span><span class="stat-value" id="best">0</span></div>
   </header>
   <main class="arena-wrap">
     <div class="arena" id="arena">
@@ -90,9 +84,7 @@
       </div>
     </div>
   </main>
-  <div class="footer">
-    <button class="ctrl-btn" id="resetBtn" type="button">Restart</button>
-  </div>
+  <div class="footer"><button class="ctrl-btn" id="resetBtn" type="button">Restart</button></div>
 </div>
 <script>
 (()=>{
@@ -107,56 +99,56 @@
   const bestEl=document.getElementById('best');
   const hintEl=document.getElementById('hint');
 
-  // === PHYSICS (plus réactif) ===
-  const GRAVITY=0.85;        // tombe vite, snappy
-  const JUMP_VEL=-15;        // saut puissant
-  const HOLD_GRAVITY_MULT=0.45; // gravité réduite quand on maintient le tap
-  const MAX_HOLD_FRAMES=14;
-  const SLIDE_FRAMES=26;
+  // PHYSIQUE
+  const GRAVITY=0.85, JUMP_VEL=-15, HOLD_GRAVITY_MULT=0.45, MAX_HOLD_FRAMES=14;
+  const SLIDE_FRAMES=28;
   const PLAYER_SIZE=44;
-  const SPRITE_PX=4;         // taille d'un pixel du sprite
+  const SPRITE_PX=3;
   const PLAYER_X_RATIO=0.18;
   const BASE_SPEED=4.5;
 
-  // === SPRITES PIXEL ART ===
-  // 11 wide x 11 tall (44x44 px à SPRITE_PX=4)
+  // === SPRITES PIXEL ART AMÉLIORÉS (13 wide × 14 tall) ===
   const PANDA_BASE=[
-    '..N.N.N.N..',  // 0: oreilles
-    '.NN.N.N.NN.',
-    '.NWWWWWWWN.',  // 2: tête haut
-    '.WNNWWWNNW.',  // 3: contour yeux
-    '.WBWWWWWBW.',  // 4: yeux blancs
-    '.WWWWNNWWW.',  // 5: museau
-    '.WWWWWWWWW.',
-    'WWWWWWWWWWW',  // 7: corps début
-    'WWWWWWWWWWW',
-    'WWWWWWWWWWW',
-    'WWWWWWWWWWW',
+    '..NN.....NN..',  // 0: pointes oreilles
+    '.NNNN...NNNN.',  // 1: oreilles
+    '.NNNNNNNNNNN.',  // 2: haut tête (oreilles connectées)
+    '.NWWWWWWWWWN.',  // 3: tête bord
+    '.WWNNWWWNNWW.',  // 4: taches yeux haut
+    '.WWNIWWWINWW.',  // 5: yeux avec reflet (I=blanc pur)
+    '.WWNNWWWNNWW.',  // 6: taches yeux bas
+    '.WWWWNNNWWWW.',  // 7: nez/museau
+    '.WWWWWWWWWWW.',  // 8: menton
+    'WWWWWWWWWWWWW',  // 9: épaules
+    'WWWWWWWWWWWWW',  // 10: corps
+    'WWWWWWWWWWWWW',  // 11: corps
+    'WWWWWWWWWWWWW',  // 12: corps
   ];
-  const PANDA_LEGS_A=['NN.....NN..'];  // pattes écartées
-  const PANDA_LEGS_B=['.NN...NN...'];  // pattes resserrées (mi-foulée)
-  const PANDA_LEGS_AIR=['.NN...NN...']; // en l'air
-  const PANDA_LEGS_SLIDE=['NNNNNNNNNNN']; // glisse - pattes étirées
+  const PANDA_LEGS_A=['NN.........NN'];
+  const PANDA_LEGS_B=['..NN.....NN..'];
+  const PANDA_LEGS_AIR=['.NN.......NN.'];
+  const PANDA_LEGS_SLIDE=['NNNNNNNNNNNNN'];
 
   const FOX_BASE=[
-    'O.........O',  // 0: pointes oreilles
-    'OO.......OO',
-    '.OOO...OOO.',  // 2: bases oreilles
-    '..OOOOOOO..',  // 3: tête
-    '..OWWWWWO..',  // 4: face blanche
-    '..OBWWWBO..',  // 5: yeux
-    '..OWWNWWO..',  // 6: nez
-    '.OOOWWWOOO.',  // 7: cou
-    'OOWWWWWWWOO',  // 8: corps avec ventre blanc
-    'OOWWWWWWWOO',
-    'OOOOOOOOOOO',
+    'O...........O',  // 0: pointes oreilles
+    'OO.........OO',  // 1: oreilles
+    '.OO.......OO.',  // 2: bases oreilles pointues
+    '..OOOOOOOOO..',  // 3: crâne
+    '..OWWWWWWWO..',  // 4: face blanche
+    '.OOWBWWWBWOO.',  // 5: yeux noirs
+    '.OOOWWWWWOOO.',  // 6: face
+    '..OWWNNNWWO..',  // 7: museau noir
+    '..OOWWWWWOO..',  // 8: menton
+    '.OOOOOOOOOOO.',  // 9: cou
+    'OOWWWWWWWWWOO',  // 10: ventre blanc
+    'OOOWWWWWWWOOO',  // 11: corps
+    'OOOOOOOOOOOOO',  // 12: corps
   ];
-  const FOX_LEGS_A=['NN.....NN..'];
-  const FOX_LEGS_B=['.NN...NN...'];
-  const FOX_LEGS_AIR=['.NN...NN...'];
-  const FOX_LEGS_SLIDE=['NNNNNNNNNNN'];
+  const FOX_LEGS_A=['BB.........BB'];
+  const FOX_LEGS_B=['..BB.....BB..'];
+  const FOX_LEGS_AIR=['.BB.......BB.'];
+  const FOX_LEGS_SLIDE=['BBBBBBBBBBBBB'];
 
-  const PANDA_COLORS={'N':'#1a1a2e','W':'#f5f5f5','B':'#0a0a14'};
+  const PANDA_COLORS={'N':'#1a1a2e','W':'#f0f0f0','I':'#ffffff'};
   const FOX_COLORS={'O':'#ff8c42','W':'#fff5e6','B':'#1a0a00','N':'#1a0a00'};
 
   function buildSprite(rows,colors){
@@ -202,15 +194,22 @@
   let char='panda';
   try{const s=localStorage.getItem('runner_char');if(s&&CHARS[s])char=s;}catch(e){}
 
-  // === OBSTACLES ===
+  // === OBSTACLES (avec poids dynamiques selon difficulté) ===
   const OBS_TYPES=[
-    {type:'low',  w:18, h:38, weight:5, fly:false},
-    {type:'mid',  w:20, h:58, weight:3, fly:false},
-    {type:'tall', w:16, h:88, weight:1.2, fly:false},
-    {type:'wide', w:46, h:38, weight:1.5, fly:false},
-    {type:'fly',  w:42, h:24, weight:2, fly:true, flyOffset:62},
+    {type:'low',  w:18, h:38, fly:false},
+    {type:'mid',  w:20, h:58, fly:false},
+    {type:'tall', w:16, h:88, fly:false},
+    {type:'wide', w:46, h:38, fly:false},
+    {type:'fly',  w:42, h:24, fly:true, flyOffset:62},
   ];
-  const OBS_W_TOTAL=OBS_TYPES.reduce((s,t)=>s+t.weight,0);
+  // multiplicateurs [easy, hard] pour faire évoluer la fréquence
+  const DIFF_MULT={
+    'low':[6,3],
+    'mid':[3,3.5],
+    'tall':[0.5,2.2],
+    'wide':[1.5,1.5],
+    'fly':[1.8,3.2],
+  };
 
   // STATE
   let W,H,groundY;
@@ -256,7 +255,7 @@
     obstacles=[];particles=[];popups=[];trail=[];
     speed=BASE_SPEED;distance=0;obsPassed=0;maxSpeedRatio=1;
     alive=true;paused=false;
-    frame=0;gridOffset=0;nextSpawn=80;
+    frame=0;gridOffset=0;nextSpawn=120;
     shakeT=0;shakeI=0;
     jumpHeld=false;jumpHeldFrames=0;
     distEl.textContent=0;distEl.classList.remove('hot');
@@ -284,18 +283,72 @@
   }
   function hideOverlay(){overlay.classList.remove('visible');}
 
-  function pickObs(){
-    let r=Math.random()*OBS_W_TOTAL;
-    for(const t of OBS_TYPES){if((r-=t.weight)<=0)return t;}
-    return OBS_TYPES[0];
+  // === DIFFICULTÉ PROGRESSIVE ===
+  function getDifficulty(){return Math.min(distance/1500,1);}
+
+  function pickObsByDiff(diff){
+    let total=0;
+    const adjusted=OBS_TYPES.map(t=>{
+      const m=DIFF_MULT[t.type];
+      const w=m[0]+(m[1]-m[0])*diff;
+      total+=w;
+      return{...t,_w:w};
+    });
+    let r=Math.random()*total;
+    for(const t of adjusted){if((r-=t._w)<=0)return t;}
+    return adjusted[0];
   }
-  function spawnObstacle(){
-    const t=pickObs();
-    const o={type:t.type,x:W+t.w,w:t.w,h:t.h,fly:!!t.fly,passed:false};
-    o.y=t.fly?groundY-t.flyOffset-t.h:groundY-t.h;
-    obstacles.push(o);
+
+  function pickGroundForGroup(diff){
+    // pour les groupes : seulement low/mid (jamais 2 tall d'affilée)
+    const opts=OBS_TYPES.filter(t=>t.type==='low'||t.type==='mid');
+    const lowChance=0.55-diff*0.20;
+    return Math.random()<lowChance?opts[0]:opts[1];
+  }
+
+  function spawnWave(){
+    const diff=getDifficulty();
+
+    // Taille du groupe
+    let groupSize=1;
+    if(Math.random()<0.05+diff*0.32){
+      groupSize=(Math.random()<0.30+diff*0.25)?3:2;
+    }
+
+    // Type de groupe : sol ou volant
+    const flyChance=0.20+diff*0.10;
+    const isFlyGroup=groupSize>1&&Math.random()<flyChance;
+
+    let xOffset=0;
+    for(let i=0;i<groupSize;i++){
+      let t;
+      if(groupSize===1){t=pickObsByDiff(diff);}
+      else if(isFlyGroup){t=OBS_TYPES.find(x=>x.fly);}
+      else{t=pickGroundForGroup(diff);}
+
+      const o={type:t.type,x:W+t.w+xOffset,w:t.w,h:t.h,fly:!!t.fly,passed:false};
+      o.y=t.fly?groundY-t.flyOffset-t.h:groundY-t.h;
+      obstacles.push(o);
+
+      if(i<groupSize-1){
+        // espacement intra-groupe : drones plus serrés (pour glissade unique), sol plus écarté
+        const intraGap=isFlyGroup?60+Math.random()*70:75+Math.random()*85;
+        xOffset+=t.w+intraGap;
+      }
+    }
+
+    // gap avant prochaine wave
     const jumpFrames=(2*Math.abs(JUMP_VEL))/GRAVITY;
-    nextSpawn=jumpFrames*speed*1.4+t.w+30+Math.random()*100;
+    const baseGap=jumpFrames*speed*1.4;
+    const gapMul=0.95+Math.random()*(0.95-diff*0.40);
+    let gap=baseGap*gapMul+xOffset;
+
+    // pause-respiration aléatoire (plus fréquente début, rare fin)
+    if(Math.random()<0.18-diff*0.12){
+      gap+=200+Math.random()*250;
+    }
+
+    nextSpawn=gap;
   }
 
   function triggerJump(){
@@ -349,9 +402,7 @@
 
     if(!hintFaded&&distance>50){hintEl.classList.add('fade');hintFaded=true;}
 
-    // === PHYSIQUE JOUEUR : saut variable + squash/stretch ===
     if(player.state==='jumping'){
-      // gravité réduite si on maintient le tap pendant la montée
       let g=GRAVITY;
       if(jumpHeld&&player.vy<0&&jumpHeldFrames<MAX_HOLD_FRAMES){
         g=GRAVITY*HOLD_GRAVITY_MULT;
@@ -364,7 +415,7 @@
         player.vy=0;
         player.state='running';
         player.grounded=true;
-        player.squashTimer=8;  // déclenche l'écrasement à l'atterrissage
+        player.squashTimer=8;
         sndLand();
         for(let i=0;i<8;i++)particles.push({x:player.x+(Math.random()-0.5)*30,y:groundY,vx:(Math.random()-0.5)*4,vy:-Math.random()*3,life:18,max:18,color:'0,255,156'});
         if(navigator.vibrate)try{navigator.vibrate(4);}catch(e){}
@@ -376,7 +427,6 @@
       if(player.slideTimer<=0)player.state='running';
     }
 
-    // obstacles
     for(const o of obstacles){
       o.x-=speed;
       if(!o.passed&&o.x+o.w<player.x){o.passed=true;obsPassed++;}
@@ -384,7 +434,7 @@
     obstacles=obstacles.filter(o=>o.x+o.w>-50);
 
     nextSpawn-=speed;
-    if(nextSpawn<=0)spawnObstacle();
+    if(nextSpawn<=0)spawnWave();
 
     for(const o of obstacles){if(checkCollision(o)){die();return;}}
 
@@ -411,20 +461,13 @@
     const g=ctx.createLinearGradient(0,0,0,groundY);
     g.addColorStop(0,'#0a0a25');g.addColorStop(0.6,'#1a0a3a');g.addColorStop(1,'#3d0a4a');
     ctx.fillStyle=g;ctx.fillRect(0,0,W,groundY);
-
     const sunY=groundY-72,sunR=78;
     const sg=ctx.createRadialGradient(W/2,sunY+20,5,W/2,sunY,sunR);
     sg.addColorStop(0,'#ffaa44');sg.addColorStop(0.4,'#ff4488');sg.addColorStop(1,'rgba(255,68,136,0)');
     ctx.fillStyle=sg;ctx.fillRect(W/2-sunR,sunY-sunR,sunR*2,sunR);
     ctx.fillStyle='#0a0a25';
     for(let i=0;i<4;i++){const yy=sunY-sunR*0.7+i*sunR*0.18;ctx.fillRect(W/2-sunR,yy,sunR*2,3);}
-
-    for(const s of stars){
-      const alpha=0.3+Math.sin(frame*0.04+s.phase)*0.25;
-      ctx.fillStyle=`rgba(255,255,255,${alpha})`;
-      ctx.fillRect(s.x,s.y,s.size,s.size);
-    }
-
+    for(const s of stars){const alpha=0.3+Math.sin(frame*0.04+s.phase)*0.25;ctx.fillStyle=`rgba(255,255,255,${alpha})`;ctx.fillRect(s.x,s.y,s.size,s.size);}
     ctx.fillStyle='#0a0014';ctx.fillRect(0,groundY,W,H-groundY);
     ctx.strokeStyle='#ff3eb5';ctx.lineWidth=1.5;
     const rungs=10,offset=(gridOffset%80)/80;
@@ -435,8 +478,7 @@
     }
     const numCols=14,cx=W/2;
     for(let i=-numCols;i<=numCols;i++){
-      const colNorm=i/numCols;
-      ctx.globalAlpha=0.3;
+      const colNorm=i/numCols;ctx.globalAlpha=0.3;
       ctx.beginPath();ctx.moveTo(cx+colNorm*W*0.6,groundY);ctx.lineTo(cx+colNorm*W*4,H);ctx.stroke();
     }
     ctx.globalAlpha=1;
@@ -445,154 +487,99 @@
     ctx.shadowBlur=0;
   }
 
-  // === OBSTACLES THÉMATIQUES ===
   function drawBamboo(o){
     const x=o.x,y=o.y,w=o.w,h=o.h;
-    // tige
     ctx.shadowBlur=10;ctx.shadowColor='#5dc463';
     const grad=ctx.createLinearGradient(x,0,x+w,0);
     grad.addColorStop(0,'#2d5e2e');grad.addColorStop(0.5,'#5dc463');grad.addColorStop(1,'#2d5e2e');
-    ctx.fillStyle=grad;
-    ctx.fillRect(x,y,w,h);
-    ctx.shadowBlur=0;
-    // jointures (segments du bambou)
+    ctx.fillStyle=grad;ctx.fillRect(x,y,w,h);ctx.shadowBlur=0;
     ctx.fillStyle='#1f4220';
     const jointCount=Math.max(1,Math.floor(h/22));
     for(let i=1;i<=jointCount;i++){
       const jy=y+i*h/(jointCount+1);
       ctx.fillRect(x-1,jy-1,w+2,2);
-      ctx.fillStyle='#7de083';
-      ctx.fillRect(x-1,jy-2,w+2,1);
+      ctx.fillStyle='#7de083';ctx.fillRect(x-1,jy-2,w+2,1);
       ctx.fillStyle='#1f4220';
     }
-    // feuilles au sommet
-    ctx.shadowBlur=8;ctx.shadowColor='#5dc463';
-    ctx.fillStyle='#5dc463';
-    ctx.beginPath();
-    ctx.moveTo(x+w/2,y-2);ctx.lineTo(x-7,y-8);ctx.lineTo(x+w/2,y+3);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x+w/2,y-2);ctx.lineTo(x+w+7,y-8);ctx.lineTo(x+w/2,y+3);
-    ctx.fill();
-    if(h>50){
-      ctx.beginPath();
-      ctx.moveTo(x+w/2,y+h*0.35);ctx.lineTo(x-6,y+h*0.3);ctx.lineTo(x+w/2,y+h*0.4);
-      ctx.fill();
-    }
+    ctx.shadowBlur=8;ctx.shadowColor='#5dc463';ctx.fillStyle='#5dc463';
+    ctx.beginPath();ctx.moveTo(x+w/2,y-2);ctx.lineTo(x-7,y-8);ctx.lineTo(x+w/2,y+3);ctx.fill();
+    ctx.beginPath();ctx.moveTo(x+w/2,y-2);ctx.lineTo(x+w+7,y-8);ctx.lineTo(x+w/2,y+3);ctx.fill();
+    if(h>50){ctx.beginPath();ctx.moveTo(x+w/2,y+h*0.35);ctx.lineTo(x-6,y+h*0.3);ctx.lineTo(x+w/2,y+h*0.4);ctx.fill();}
     ctx.shadowBlur=0;
-    // highlight sur la tige
-    ctx.fillStyle='rgba(255,255,255,0.18)';
-    ctx.fillRect(x+1,y,2,h);
+    ctx.fillStyle='rgba(255,255,255,0.18)';ctx.fillRect(x+1,y,2,h);
   }
-
   function drawWideBamboo(o){
-    // cluster de 3 bambous serrés
     const segW=Math.floor(o.w/3);
-    for(let i=0;i<3;i++){
-      drawBamboo({x:o.x+i*segW,y:o.y-(i===1?6:0),w:segW-2,h:o.h+(i===1?6:0)});
-    }
+    for(let i=0;i<3;i++)drawBamboo({x:o.x+i*segW,y:o.y-(i===1?6:0),w:segW-2,h:o.h+(i===1?6:0)});
   }
-
   function drawCactus(o){
     const x=o.x,y=o.y,w=o.w,h=o.h;
-    // tronc principal (vert sombre style cactus saguaro)
     ctx.shadowBlur=10;ctx.shadowColor='#88c070';
     const grad=ctx.createLinearGradient(x,0,x+w,0);
     grad.addColorStop(0,'#3a5d2c');grad.addColorStop(0.5,'#5e8a4a');grad.addColorStop(1,'#3a5d2c');
     ctx.fillStyle=grad;
-    // tronc avec coin arrondi
-    ctx.beginPath();
-    ctx.moveTo(x+3,y);ctx.lineTo(x+w-3,y);ctx.quadraticCurveTo(x+w,y,x+w,y+3);
-    ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.lineTo(x,y+3);
-    ctx.quadraticCurveTo(x,y,x+3,y);
-    ctx.closePath();ctx.fill();
-    ctx.shadowBlur=0;
-    // bras du cactus (si assez haut)
+    ctx.beginPath();ctx.moveTo(x+3,y);ctx.lineTo(x+w-3,y);ctx.quadraticCurveTo(x+w,y,x+w,y+3);
+    ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.lineTo(x,y+3);ctx.quadraticCurveTo(x,y,x+3,y);
+    ctx.closePath();ctx.fill();ctx.shadowBlur=0;
     if(h>50){
       ctx.fillStyle=grad;
-      // bras gauche
       ctx.fillRect(x-w*0.6,y+h*0.4,w*0.6,4);
       ctx.fillRect(x-w*0.6,y+h*0.2,4,h*0.25);
-      // bras droit
       ctx.fillRect(x+w,y+h*0.55,w*0.6,4);
       ctx.fillRect(x+w+w*0.6-4,y+h*0.35,4,h*0.25);
     }
-    // épines (petites lignes verticales)
     ctx.strokeStyle='#fff5e6';ctx.lineWidth=1;
     for(let i=0;i<Math.floor(h/8);i++){
       const ey=y+4+i*8;
       ctx.beginPath();ctx.moveTo(x+w*0.3,ey);ctx.lineTo(x+w*0.3,ey+2);
-      ctx.moveTo(x+w*0.7,ey);ctx.lineTo(x+w*0.7,ey+2);
-      ctx.stroke();
+      ctx.moveTo(x+w*0.7,ey);ctx.lineTo(x+w*0.7,ey+2);ctx.stroke();
     }
-    // highlight
-    ctx.fillStyle='rgba(255,255,255,0.15)';
-    ctx.fillRect(x+1,y+3,2,h-3);
+    ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(x+1,y+3,2,h-3);
   }
-
   function drawBush(o){
     const x=o.x,y=o.y,w=o.w,h=o.h;
     const cx=x+w/2,cy=y+h/2;
     ctx.shadowBlur=10;ctx.shadowColor='#ff8c42';
-    // corps du buisson (rond)
     ctx.fillStyle='#6b4423';
-    ctx.beginPath();
-    ctx.ellipse(cx,cy+2,w/2,h/2,0,0,Math.PI*2);
-    ctx.fill();
-    // bumps colorés (orange-brun)
+    ctx.beginPath();ctx.ellipse(cx,cy+2,w/2,h/2,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#a05a28';
     ctx.beginPath();
     ctx.arc(cx-w*0.25,cy-h*0.1,w*0.22,0,Math.PI*2);
     ctx.arc(cx+w*0.2,cy-h*0.18,w*0.18,0,Math.PI*2);
-    ctx.arc(cx-w*0.05,cy+h*0.1,w*0.18,0,Math.PI*2);
-    ctx.fill();
-    // highlights orange
+    ctx.arc(cx-w*0.05,cy+h*0.1,w*0.18,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#ff8c42';
     ctx.beginPath();
     ctx.arc(cx-w*0.18,cy-h*0.2,3,0,Math.PI*2);
-    ctx.arc(cx+w*0.12,cy-h*0.05,2.5,0,Math.PI*2);
-    ctx.fill();
+    ctx.arc(cx+w*0.12,cy-h*0.05,2.5,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;
-    // épines/branches qui dépassent
     ctx.strokeStyle='#ff8c42';ctx.lineWidth=1.5;
     for(let i=0;i<5;i++){
       const a=(i/5)*Math.PI*2-Math.PI/2+0.3;
-      const r1=Math.min(w,h)/2*0.9;
-      const r2=r1+5;
-      ctx.beginPath();
-      ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
-      ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
-      ctx.stroke();
+      const r1=Math.min(w,h)/2*0.9,r2=r1+5;
+      ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);ctx.stroke();
     }
   }
-
   function drawWideBush(o){
-    // cluster de 3 buissons
     const segW=Math.floor(o.w/2.5);
     drawBush({x:o.x,y:o.y+8,w:segW,h:o.h-8});
     drawBush({x:o.x+o.w*0.35,y:o.y,w:segW,h:o.h});
     drawBush({x:o.x+o.w-segW,y:o.y+10,w:segW,h:o.h-10});
   }
-
   function drawDrone(o){
     const cx=o.x+o.w/2,cy=o.y+o.h/2;
     ctx.shadowBlur=16;ctx.shadowColor='#ff3eb5';
     ctx.fillStyle='#ff3eb5';
-    ctx.beginPath();
-    ctx.moveTo(cx,o.y);ctx.lineTo(o.x+o.w,cy);ctx.lineTo(cx,o.y+o.h);ctx.lineTo(o.x,cy);
-    ctx.closePath();ctx.fill();
-    ctx.shadowBlur=0;
+    ctx.beginPath();ctx.moveTo(cx,o.y);ctx.lineTo(o.x+o.w,cy);ctx.lineTo(cx,o.y+o.h);ctx.lineTo(o.x,cy);
+    ctx.closePath();ctx.fill();ctx.shadowBlur=0;
     ctx.fillStyle='#ffffff';
     ctx.beginPath();ctx.arc(cx,cy,2.5,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#ff3eb5';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(cx-3,o.y-4);ctx.lineTo(cx-3,o.y+1);ctx.moveTo(cx+3,o.y-4);ctx.lineTo(cx+3,o.y+1);ctx.stroke();
   }
-
   function drawObstacle(o){
     if(o.fly){drawDrone(o);return;}
     if(char==='panda'){
-      if(o.type==='wide')drawWideBamboo(o);
-      else drawBamboo(o);
+      if(o.type==='wide')drawWideBamboo(o);else drawBamboo(o);
     } else {
       if(o.type==='wide')drawWideBush(o);
       else if(o.type==='low')drawBush(o);
@@ -600,20 +587,14 @@
     }
   }
 
-  // === JOUEUR avec sprite + squash/stretch ===
   function drawPlayer(){
     const c=CHARS[char];
-
-    // ombre au sol
     const heightAboveGround=groundY-PLAYER_SIZE/2-player.y;
     const shadowAlpha=Math.max(0.1,0.5-heightAboveGround/180);
     const shadowW=PLAYER_SIZE*0.45*(1-heightAboveGround*0.002);
     ctx.fillStyle=`rgba(0,255,156,${shadowAlpha*0.5})`;
-    ctx.beginPath();
-    ctx.ellipse(player.x,groundY+2,Math.max(8,shadowW),3,0,0,Math.PI*2);
-    ctx.fill();
+    ctx.beginPath();ctx.ellipse(player.x,groundY+2,Math.max(8,shadowW),3,0,0,Math.PI*2);ctx.fill();
 
-    // trail
     for(let i=0;i<trail.length;i++){
       const t=trail[i];t.life--;
       const a=t.life/t.max*0.35;
@@ -622,42 +603,28 @@
     }
     trail=trail.filter(t=>t.life>0);
 
-    // === SQUASH / STRETCH dynamique ===
     let scaleX=1,scaleY=1;
     if(player.state==='running'){
-      // bobbing subtil
-      const bob=Math.sin(frame*0.4)*0.04;
+      const bob=Math.sin(frame*0.5)*0.05;
       scaleY=1+bob;scaleX=1-bob*0.5;
     } else if(player.state==='jumping'){
-      if(player.vy<0){
-        // montée : étirement vertical
-        const t=Math.min(1,-player.vy/Math.abs(JUMP_VEL));
-        scaleY=1+t*0.22;scaleX=1-t*0.10;
-      } else {
-        // chute : étirement plus léger
-        const t=Math.min(1,player.vy/12);
-        scaleY=1+t*0.12;scaleX=1-t*0.05;
-      }
-    } else if(player.state==='sliding'){
-      scaleX=1.3;scaleY=0.55;
-    }
-    // squash post-atterrissage (override)
-    if(player.squashTimer>0){
-      const t=player.squashTimer/8;
-      scaleX=1+t*0.35;
-      scaleY=1-t*0.32;
-    }
+      if(player.vy<0){const t=Math.min(1,-player.vy/Math.abs(JUMP_VEL));scaleY=1+t*0.22;scaleX=1-t*0.10;}
+      else{const t=Math.min(1,player.vy/12);scaleY=1+t*0.12;scaleX=1-t*0.05;}
+    } else if(player.state==='sliding'){scaleX=1.3;scaleY=0.55;}
+    if(player.squashTimer>0){const t=player.squashTimer/8;scaleX=1+t*0.35;scaleY=1-t*0.32;}
 
-    // sélection de la frame
     const set=SPRITES[char];
     let sprite;
     if(player.state==='sliding')sprite=set.slide;
     else if(player.state==='jumping')sprite=set.jump;
-    else sprite=Math.floor(frame/6)%2===0?set.runA:set.runB;
+    else{
+      // anim plus rapide à mesure qu'on accélère
+      const animRate=Math.max(4,8-Math.floor(speed/3));
+      sprite=Math.floor(frame/animRate)%2===0?set.runA:set.runB;
+    }
 
-    // bobbing vertical visuel quand on court (en plus du scale)
     let py=player.y;
-    if(player.state==='running')py+=Math.sin(frame*0.4)*1.2;
+    if(player.state==='running')py+=Math.sin(frame*0.5)*1.8;
 
     ctx.save();
     ctx.translate(player.x,py);
@@ -708,12 +675,8 @@
     requestAnimationFrame(loop);
   }
 
-  function startGame(){
-    if(started&&alive)return;
-    reset();started=true;alive=true;
-  }
+  function startGame(){if(started&&alive)return;reset();started=true;alive=true;}
 
-  // INPUT
   arena.addEventListener('pointerdown',e=>{
     if(e.cancelable)e.preventDefault();
     ensureAudio();
@@ -754,9 +717,7 @@
     }
     if(e.code==='KeyR'){e.preventDefault();started=false;alive=false;showOverlayStart();}
   });
-  document.addEventListener('keyup',e=>{
-    if(['Space','ArrowUp','KeyW'].includes(e.code))jumpHeld=false;
-  });
+  document.addEventListener('keyup',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code))jumpHeld=false;});
 
   document.addEventListener('touchmove',e=>{if(e.cancelable)e.preventDefault();},{passive:false});
   let lastTouchEnd=0;
